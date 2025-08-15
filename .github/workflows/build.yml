@@ -1,0 +1,158 @@
+name: Build and Test
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        compiler: [msvc, mingw]
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup MSVC
+      if: matrix.compiler == 'msvc'
+      uses: microsoft/setup-msbuild@v1.1
+    
+    - name: Setup MinGW
+      if: matrix.compiler == 'mingw'
+      uses: msys2/setup-msys2@v2
+    
+    - name: Install MinGW
+      if: matrix.compiler == 'mingw'
+      run: |
+        msys2 -c "pacman -S mingw-w64-x86_64-gcc --noconfirm"
+        echo "C:/msys64/mingw64/bin" >> $GITHUB_PATH
+    
+    - name: Build with MSVC
+      if: matrix.compiler == 'msvc'
+      run: |
+        cl /std:c++17 app3.cpp /Fe:binary_analyzer.exe
+    
+    - name: Build with MinGW
+      if: matrix.compiler == 'mingw'
+      run: |
+        g++ -std=c++17 -o binary_analyzer.exe app3.cpp
+    
+    - name: Test executable
+      run: |
+        if (Test-Path "binary_analyzer.exe") {
+          echo "Build successful: binary_analyzer.exe"
+          Get-ChildItem binary_analyzer.exe | Select-Object Name, Length
+        } else {
+          echo "Build failed: executable not found"
+          exit 1
+        }
+    
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: binary-analyzer-windows-${{ matrix.compiler }}
+        path: binary_analyzer.exe
+
+  build-linux:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential cmake
+    
+    - name: Build with GCC
+      run: |
+        g++ -std=c++17 -Wall -Wextra -o binary_analyzer app3.cpp
+    
+    - name: Build with CMake
+      run: |
+        mkdir build && cd build
+        cmake ..
+        make
+    
+    - name: Test executable
+      run: |
+        if [ -f "binary_analyzer" ]; then
+          echo "Build successful: binary_analyzer"
+          ls -la binary_analyzer
+          file binary_analyzer
+        else
+          echo "Build failed: executable not found"
+          exit 1
+        fi
+    
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: binary-analyzer-linux
+        path: binary_analyzer
+
+  build-macos:
+    runs-on: macos-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Install dependencies
+      run: |
+        brew install cmake
+    
+    - name: Build with Clang
+      run: |
+        clang++ -std=c++17 -Wall -Wextra -o binary_analyzer app3.cpp
+    
+    - name: Build with CMake
+      run: |
+        mkdir build && cd build
+        cmake ..
+        make
+    
+    - name: Test executable
+      run: |
+        if [ -f "binary_analyzer" ]; then
+          echo "Build successful: binary_analyzer"
+          ls -la binary_analyzer
+          file binary_analyzer
+        else
+          echo "Build failed: executable not found"
+          exit 1
+        fi
+    
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: binary-analyzer-macos
+        path: binary_analyzer
+
+  code-quality:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Check file structure
+      run: |
+        echo "Checking project structure..."
+        ls -la
+        echo "Checking source files..."
+        find . -name "*.cpp" -o -name "*.h" -o -name "*.hpp"
+    
+    - name: Check for common issues
+      run: |
+        echo "Checking for TODO comments..."
+        grep -r "TODO" . || echo "No TODO comments found"
+        echo "Checking for FIXME comments..."
+        grep -r "FIXME" . || echo "No FIXME comments found"
+    
+    - name: Validate CMakeLists.txt
+      run: |
+        cmake --version
+        cmake -S . -B build
+        echo "CMake configuration successful"
