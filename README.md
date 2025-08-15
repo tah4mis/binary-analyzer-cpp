@@ -99,7 +99,7 @@ En sık gecen 10 byte:
 ## 📁 Proje Yapısı / Project Structure
 
 ```
-tersine_mühendislik_cpp/
+binary-analyzer_cpp/
 ├── app3.cpp              # Ana kaynak kod / Main source code
 ├── README.md             # Bu dosya / This file
 ├── LICENSE               # MIT lisansı / MIT license
@@ -131,17 +131,5 @@ Bu proje MIT lisansı altında lisanslanmıştır. Detaylar için [LICENSE](LICE
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
-## 🤝 Teşekkürler / Acknowledgments
-
-- C++ standart kütüphanesi
-- Binary analiz teknikleri
-- Tersine mühendislik topluluğu
-
-## 📞 İletişim / Contact
-
-- Proje Linki: [GitHub Repository](https://github.com/username/tersine_muhendislik_cpp)
-- Sorunlar: [Issues](https://github.com/username/tersine_muhendislik_cpp/issues)
-
----
 
 ⭐ Bu projeyi beğendiyseniz yıldız vermeyi unutmayın! / Don't forget to star this project if you liked it!
